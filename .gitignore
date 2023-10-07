@@ -4,3 +4,4 @@
 /temp/
 /python/
 **/*.reference
+/release/plugin.program.steamlink-*.zip
