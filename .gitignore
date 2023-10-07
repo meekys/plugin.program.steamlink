@@ -1,0 +1,6 @@
+/.idea/
+/__pycache__
+/resources/lib/steamlink/
+/temp/
+/python/
+**/*.reference

@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<addon id="plugin.program.steamlink" name="Steamlink" version="0.0.1" provider-name="meekys">
+    <requires>
+        <import addon="xbmc.python" version="3.0.0"/>
+        <import addon="service.system.docker" optional="true" version="9.80.11.133"/>
+    </requires>
+    <extension point="xbmc.python.script" library="addon.py">
+        <provides>game</provides>
+    </extension>
+    <extension point="xbmc.addon.metadata">
+        <summary lang="en_GB">Launcher for Steamlink game streaming on LibreELEC Raspberry Pi 4 and Generic x86_64 devices.</summary>
+        <summary lang="nl_NL">Starter voor Steamlink game streaming voor LibreELEC Raspberry Pi 4 en generieke x86_64 apparaten.</summary>
+        <summary lang="de_DE">Starter für Steamlink-Spiel-Streaming für LibreELEC Raspberry Pi 4 und generischen x86_64-Geräten.</summary>
+        <summary lang="fr_FR">Lanceur pour Steamlink pour les appareils LibreELEC Raspberry Pi 4 et appareils génériques en x86_64.</summary>
+        <description lang="en_GB">This add-on launches Steamlink. This add-on also has the ability to update Steamlink.</description>
+        <description lang="nl_NL">Deze uitbreiding start Steamlink. Deze uitbreiding heeft ook de mogelijkheid om een specifiek spel op te starten en Steamlink bij te werken.</description>
+        <description lang="de_DE">Diese Erweiterung startet Steamlink. Diese Erweiterung bietet auch die Möglichkeit, ein bestimmtes Spiel zu starten und Steamlink zu aktualisieren.</description>
+        <description lang="fr_FR">Cet add-on lance Steamlink. Cet add-on permet aussi de lancer un jeu directement et de mettre à jour Steamlink.</description>
+        <language>en nl de fr</language>
+        <platform>linux</platform>
+        <license>GPL-3.0-or-later</license>
+        <website>https://github.com/meekys/plugin.program.steamlink</website>
+        <source>https://github.com/meekys/plugin.program.steamlink</source>
+        <news>
+v0.0.1
+- Initial release for LibreELEC on the Raspberry Pi 4
+        </news>
+        <disclaimer lang="en_GB">Feel free to use this at your own risk.</disclaimer>
+        <disclaimer lang="nl_NL">Voel je vrij om dit te gebruiken maar wel op eigen risico.</disclaimer>
+        <disclaimer lang="de_DE">Sie können dies auf eigenes Risiko verwenden.</disclaimer>
+        <disclaimer lang="fr_FR">Utilisez cet add-on à vos risques et périls.</disclaimer>
+        <assets>
+            <icon>resources/icon.png</icon>
+            <fanart>resources/fanart.jpg</fanart>
+            <banner>resources/banner.png</banner>
+            <screenshot>resources/screenshot.png</screenshot>
+        </assets>
+    </extension>
+</addon>
