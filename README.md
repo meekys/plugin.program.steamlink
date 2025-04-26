@@ -1,5 +1,5 @@
-# Kodi 19+ Steamlink launcher for the Raspberry Pi 4 and Generic x86_64 systems
-A launcher and updater for running Steamlink on Raspberry Pi 4 systems with LibreELEC.
+# Kodi 19+ Steamlink launcher for the Raspberry Pi and Generic x86_64 systems
+A launcher and updater for running Steamlink on Raspberry Pi systems with LibreELEC.
 
 ## Background:
 This Kodi addon-on was developed to enable Steamlink game streaming on LibreELEC systems.
@@ -16,7 +16,7 @@ And for more general info about Steamlink:
 https://steamcommunity.com/app/353380
 
 ## Prerequisites:
-- [Raspberry Pi 4](https://libreelec.tv/raspberry-pi-4/) with LibreELEC (Matrix) 10+ installed
+- [Raspberry Pi](https://libreelec.tv/downloads/raspberry/) with LibreELEC (Omega) 12+ installed
 - Device is connected to a local network via ethernet (preferred) or Wi-Fi
 - Gaming PC with Steam installed, connected to local network via ethernet (preferred) or Wi-Fi
 - Enough temporary storage space on your LibreELEC device to install Steamlink (about 500 MB is needed)
@@ -32,11 +32,11 @@ Raspberry Pi 3 UNTESTED, but might need changes to LibreELEC's config: (based on
 
 ## Instructions:
 ### 1. Install this plugin.
-- Download [plugin.program.steamlink.zip](https://github.com/meekys/plugin.program.steamlink/releases/latest/) and store it on your Kodi device.
+- Download `plugin.program.steamlink.zip` from the [Releases](https://github.com/meekys/plugin.program.steamlink/releases/latest/) and store it on your Kodi device.
 - In Kodi install Docker from the LibreELEC repository: Add-ons / Install from repository / LibreELEC Add-ons / Services / Docker 
 - Reboot LibreELEC to ensure Docker works
 - Go to Add-ons / Install from zip file
-- Select plugin.program.steamlink.zip
+- Select `plugin.program.steamlink.zip`
 
 ### 2. Enable Remote Play in Steam on your Gaming PC
 
@@ -65,9 +65,18 @@ The plugin can use the copied files to launch Steamlink from Kodi without the ex
 
 ## Known problems
 
+### 'Internal error: Oops' while starting
+When launching, if a controller is connected, it can often crash the kernel with an [oops](https://en.wikipedia.org/wiki/Linux_kernel_oops)
+
+This issue is still under investigation, but occurs while executing the closed-source SteamLink binary, supplied by Valve
+
+As a workaround, unplug any extra usb devices (including keyboards, mice and bluetooth dongles) while launching SteamLink, then re-connect them after SteamLink starts
+
 ### Help, it still doesn't work
 You can always open an issue if Steamlink doesn't launch/update or the game menu doesn't work.
 All configuration and streaming problems are probably related to Steamlink itself, you can report that on their own GitHub page: https://steamcommunity.com/app/353380/discussions/
 
 ## Thanks
 Thanks to [veldenb](https://github.com/veldenb/plugin.program.moonlight-qt) for inspiration.
+
+Thanks to [romank-sb](https://github.com/romank-sb) and [fuinril](https://github.com/fuinril) for the LibreElec 12 fixes and testing

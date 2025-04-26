@@ -62,14 +62,8 @@ then
   # Install steamlink in a container, the whole process will claim about 500MB drive space
   docker build --compress --tag steamlink .
 
-  # Switch to the add-on profile path
-  cd "$ADDON_PROFILE_PATH"
-
   # Make sure no previous container exists
   docker rm --force steamlink &> /dev/null || true
-
-  # Create a new container
-#  docker create --name steamlink steamlink
 
   # Extract the steamlink files
   docker run --name steamlink --volume "$TMP_PATH":/tmp/steamlink steamlink
