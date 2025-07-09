@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<addon id="plugin.program.steamlink" name="Steamlink" version="0.0.2" provider-name="meekys">
+<addon id="plugin.program.steamlink" name="Steamlink" version="0.1.0" provider-name="meekys">
     <requires>
         <import addon="xbmc.python" version="3.0.0"/>
-        <import addon="service.system.docker" optional="true" version="9.80.11.133"/>
+        <import addon="service.system.docker" optional="false" version="9.80.11.133"/>
     </requires>
     <extension point="xbmc.python.script" library="addon.py">
         <provides>game</provides>
@@ -22,6 +22,9 @@
         <website>https://github.com/meekys/plugin.program.steamlink</website>
         <source>https://github.com/meekys/plugin.program.steamlink</source>
         <news>
+v0.1.0
+- Re-wrote to run in docker container (Less custom code)
+- Improved start-up progress/status
 v0.0.2
 - Fixes for LibreELEC 12 and Raspberry Pi 4/5
 v0.0.1

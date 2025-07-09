@@ -6,7 +6,7 @@
 
 set -e
 
-cd "$(dirname "$0")"
+TOP=$(cd "$(dirname "$0")" && pwd)
 
 for file in /etc/os-release /usr/lib/os-release; do
   if [ -f $file ]; then
@@ -15,20 +15,24 @@ for file in /etc/os-release /usr/lib/os-release; do
   fi
 done
 
-# Parse project var and convert to lower case
-PLATFORM="$(echo "$LIBREELEC_PROJECT" | tr '[:upper:]' '[:lower:]')"
+ARCH=$(uname -m)
 
-# If platform is empty try uname
-if [ "$PLATFORM" == "" ]; then
-  PLATFORM=$(uname -m)
+if [ "$ARCH" = "aarch64" ]; then
+  ARCH="arm64"
 fi
 
 # Figure out distro (libreelec, ubuntu)
-PLATFORM_DISTRO="$ID"
+DISTRO="$ID"
 
-if [ -d "../build/$PLATFORM" ]; then
-  echo "Platform '$PLATFORM' running '$PLATFORM_DISTRO' detected..."
+if [ -d "$TOP/$DISTRO/$ARCH" ]; then
+  PLATFORM_ID="$DISTRO/$ARCH"
+elif [ -d "$TOP/$DISTRO" ]; then
+  PLATFORM_ID="$DISTRO"
+elif [ -d "$$TOP/ARCH" ]; then
+  PLATFORM_ID="$ARCH"
 else
-  echo "Platform '$PLATFORM' running '$PLATFORM_DISTRO' detected, using platform generic..."
-  PLATFORM="generic"
+  PLATFORM_ID="generic"
 fi
+
+echo "'$DISTRO' ($ARCH) detected, using platform '$PLATFORM_ID'"
+

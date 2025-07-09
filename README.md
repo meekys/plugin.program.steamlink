@@ -51,26 +51,16 @@ Open Steam, go to Steam -> Settings -> Remote Play (move slider to right)
 
 ### 4. Pair your gaming PC
 Once your PC is recognised by Steamlink, you will be asked to enter a 4-digit code into Steam to pair Steamlink with Steam.
+
 When the pairing is finished you can use Steamlink to adjust settings for streaming and launch games. Exit Steamlink and you will be returned to Kodi.
 
-### 5. Updating
-When you want to update Steamlink you can use the update menu in the add-on settings and press "Update Steamlink to the latest version".
-The plugin will update Steamlink and will notify you when it's finished.
-
 ## What magic is happening in the background when installing and updating?
-### Raspberry 4 on LibreELEC
-Essentially the plugin uses Docker to download Debian Buster and install Steamlink and its dependencies
-When that installation procedure has finished the plugin copies the needed executables and libraries from the Docker container and then destroys the container.
-The plugin can use the copied files to launch Steamlink from Kodi without the extra overhead from Docker. 
+### Raspberry 4/5 on LibreELEC
+Essentially the plugin uses Docker to contain a side-by-side installation of Raspbian OS, in which steamlink is installed and executed
 
 ## Known problems
 
-### 'Internal error: Oops' while starting
-When launching, if a controller is connected, it can often crash the kernel with an [oops](https://en.wikipedia.org/wiki/Linux_kernel_oops)
-
-This issue is still under investigation, but occurs while executing the closed-source SteamLink binary, supplied by Valve
-
-As a workaround, unplug any extra usb devices (including keyboards, mice and bluetooth dongles) while launching SteamLink, then re-connect them after SteamLink starts
+None at this time
 
 ### Help, it still doesn't work
 You can always open an issue if Steamlink doesn't launch/update or the game menu doesn't work.

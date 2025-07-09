@@ -27,12 +27,12 @@ msgstr "Steamlink"
 
 
 msgctxt "#30002"
-msgid "Update"
-msgstr "Update"
+msgid "Reset"
+msgstr "Reset"
 
 msgctxt "#30003"
-msgid "Update Steamlink to the latest version"
-msgstr "Update Steamlink to the latest version"
+msgid "Reset Steamlink Docker container"
+msgstr "Reset Steamlink Docker container"
 
 msgctxt "#30004"
 msgid "Settings"

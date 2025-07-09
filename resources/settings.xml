@@ -1,7 +1,21 @@
 <?xml version="1.0" ?>
 <settings version="1">
     <section id="plugin.program.steamlink">
-        <category id="update" label="30002">
+        <category id="reset" label="30002">
+            <group id="reset_settings" label="30002">
+                <setting id="reset_action" label="30003" type="action">
+                    <level>0</level>
+                    <data>RunScript(plugin.program.steamlink,reset)</data>
+                    <constraints>
+                        <allowempty>true</allowempty>
+                    </constraints>
+                    <control format="action" type="button">
+                        <close>true</close>
+                    </control>
+                </setting>
+            </group>
+        </category>
+        <!-- <category id="update" label="30002">
             <group id="update_settings" label="30002">
                 <setting id="update_action" label="30003" type="action">
                     <level>0</level>
@@ -14,7 +28,7 @@
                     </control>
                 </setting>
             </group>
-        </category>
+        </category> -->
         <!-- <category id="display" label="30005">
             <group id="display_egl" label="30005">
                 <setting id="display_egl_resolution" type="list[string]" label="30006" help="30007">
@@ -110,6 +124,7 @@
                 </setting>
 -->
             </group>
+<!--
             <group id="alsa_surround_71" label="30022">
                 <setting id="alsa_surround_71_0" type="integer" label="30030" help="30024">
                     <level>1</level>
@@ -191,6 +206,7 @@
                     </constraints>
                     <control type="spinner" format="integer"/>
                 </setting>
+-->
 <!--
                 <setting id="alsa_surround_71_test" label="30023" type="action">
                     <level>1</level>

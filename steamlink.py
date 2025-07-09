@@ -1,28 +1,22 @@
 import getpass
 import json
-from subprocess import Popen, PIPE, STDOUT
+import re
+import io
+from subprocess import Popen, PIPE, STDOUT, DEVNULL
 import os
 import pathlib
 import xbmc
 import xbmcgui
 from xbmcvfs import translatePath
 
-
-def launch(addon, hostname=None):
-    # Check if steamlink is installed and offer to install
-    if is_steamlink_installed() is False:
-        update(addon)
-
-    # If steamlink is still not installed abort
-    if is_steamlink_installed() is False:
-        dialog = xbmcgui.Dialog()
-        dialog.ok(addon.getLocalizedString(30200), addon.getLocalizedString(30201))
-        return
-
+def launch(addon):
     # Initialise argument vars
     systemd_args = []
-    steamlink_command = f'bash {get_resource_path("bin/launch_steamlink.sh")}'
+    steamlink_command = f'bash {get_resource_path("bin/launch.sh")}'
     steamlink_args = []
+
+    systemd_args.append('--property=Type=exec')
+    systemd_args.append('--unit=steamlink')
 
     # Check if systemd-run can be used in user-mode
     if os.environ.get('DBUS_SESSION_BUS_ADDRESS') is not None or os.environ.get('XDG_RUNTIME_DIR') is not None:
@@ -31,58 +25,30 @@ def launch(addon, hostname=None):
         # If systemd user-mode can't be used and the current kodi-user is not root, try sudo for switching (OSMC)
         steamlink_command = f'sudo -u {getpass.getuser()} {steamlink_command}'
 
-    # Check for a forced EGL display mode
-    force_mode = addon.getSetting('display_egl_resolution')
-    if force_mode != "default":
-        systemd_args.append(f'--setenv=FORCE_EGL_MODE="{force_mode}"')
-
     # Append addon path
     systemd_args.append(f'--setenv=ADDON_PROFILE_PATH="{get_addon_data_path()}"')
-
-    # Resolve audio output device
-    try:
-        service = 'Default'
-        device_name = 'Default'
-        kodi_audio_device = get_kodi_audio_device()
-
-        if len(kodi_audio_device) == 1:
-            service = kodi_audio_device[0]
-        if len(kodi_audio_device) == 2:
-            service, device_name = kodi_audio_device
-
-        if service == 'ALSA':
-            # Disable PulseAudio output by using a Steamlink environment variable
-            systemd_args.append('--setenv=PULSE_SERVER="none"')
-            systemd_args.append('--setenv=SDL_AUDIODRIVER="alsa"')
-            speaker_setup_write_alsa_config(addon)
-        elif service == 'PULSE':
-            # Tell pulse to use a specific device configured in Kodi
-            systemd_args.append(f'--setenv=PULSE_SINK="{device_name}"')
-        elif service != 'Default':
-            # Raise a warning when ALSA and PULSE are not detected
-            raise RuntimeError(f'Audio service {service} not supported')
-    except Exception as err:
-        xbmc.log(
-            f'Failed to resolve audio output device, audio within Steamlink might not work: {err}', xbmc.LOGWARNING
-        )
 
     # Create command to launch steamlink
     launch_command = 'systemd-run {} {}'.format(' '.join(systemd_args), steamlink_command)
 
+    # Prepare logging
+    logfile = f'{get_addon_data_path()}/steamlink.log'
+    if os.path.exists(logfile):
+        os.unlink(logfile)
+
     # Prepare the command
     command = f'{launch_command} ' + ' '.join(steamlink_args)
+    stop_command = 'systemctl stop steamlink'
 
     # Log the command so debugging problems is easier
     xbmc.log(f'Launching steamlink: {command}', xbmc.LOGINFO)
 
     # Show a dialog
-    game_name = addon.getLocalizedString(30001)
-
-    launch_label = addon.getLocalizedString(30202) % {'game': game_name}
+    launch_label = "" #addon.getLocalizedString(30202)
+    message = launch_label
 
     p_dialog = xbmcgui.DialogProgress()
     p_dialog.create(addon.getLocalizedString(30200), launch_label)
-    p_dialog.update(50)
 
     # Wait for the dialog to pop up
     xbmc.sleep(200)
@@ -90,66 +56,98 @@ def launch(addon, hostname=None):
     # Run the command
     exitcode = os.system(command)
 
-    # If the command was successful wait for steamlink to shut down kodi
-    if exitcode == 0:
-        xbmc.sleep(1000)
-    else:
+    if exitcode != 0:
         # If steamlink did not start notify the user
-        xbmc.log('Launching steamlink failed: ' + command, xbmc.LOGERROR)
+        xbmc.log(f'Launching steamlink failed ({exitcode}): ' + command, xbmc.LOGERROR)
         p_dialog.close()
         dialog = xbmcgui.Dialog()
         dialog.ok(addon.getLocalizedString(30200), addon.getLocalizedString(30203))
-
-
-def update(addon):
-    if is_steamlink_installed():
-        install_label = addon.getLocalizedString(30102)
-    else:
-        install_label = addon.getLocalizedString(30101)
-
-    c_dialog = xbmcgui.Dialog()
-    confirm_update = c_dialog.yesno(addon.getLocalizedString(30100), install_label)
-
-    if confirm_update is False:
         return
 
-    p_dialog = xbmcgui.DialogProgress()
-    p_dialog.create(addon.getLocalizedString(30103), addon.getLocalizedString(30104))
-
-    xbmc.log('Updating steamlink...', xbmc.LOGDEBUG)
-
     # This is an estimate of how many lines of output there should be to guess the progress
-    line_max = 2210
-    line_nr = 1
+    line_max = 3500
+    line_nr = 0
     line = ''
+    message=''
+    sub_message=''
 
-    cmd = 'ADDON_PROFILE_PATH="{}" bash {}'.format(get_addon_data_path(), get_resource_path('build/build.sh'))
-    p = Popen(cmd, stdout=PIPE, stderr=STDOUT, shell=True)
-    for line in p.stdout:
-        percent = int(round(line_nr / line_max * 100))
-        p_dialog.update(percent)
-        line_nr += 1
-    p.wait()
+    # Wait for log file to exist
+    xbmc.log(f'Waiting to read: {logfile}', xbmc.LOGINFO)
+    while not os.path.exists(logfile):
+        xbmc.sleep(50)
 
-    # Log update
-    xbmc.log('Updating steamlink finished with {} lines of output and exit-code {}: {}'.format(
-        line_nr.__str__(), p.returncode.__str__(), line.decode()
-    ), xbmc.LOGDEBUG)
+    # If the command was successful, display status messages and wait for steamlink to shut down kodi
+    xbmc.log(f'Reading: {logfile}', xbmc.LOGINFO)
+    with open(logfile, 'r', encoding='utf-8') as f:
+        while True:
+            if p_dialog.iscanceled():
+                xbmc.log(f'Stopping steamlink: {stop_command}', xbmc.LOGINFO)
+                exitcode = os.system(stop_command)
 
-    # Make sure it ends at 100%
-    p_dialog.update(100)
+                if exitcode != 0:
+                    # If steamlink did not stop notify the user
+                    xbmc.log(f'Stopping steamlink failed ({exitcode}): ' + stop_command, xbmc.LOGERROR)
+                    p_dialog.close()
+                    dialog = xbmcgui.Dialog()
+                    dialog.ok(addon.getLocalizedString(30200), 'Stop failed')
 
-    # Close the progress bar
-    p_dialog.close()
+                return
 
-    if p.returncode == 0 and is_steamlink_installed():
-        finish_label = addon.getLocalizedString(30106)
-    else:
-        finish_label = addon.getLocalizedString(30105) % {'error_msg': line.decode()}
+            line = f.readline()
 
-    dialog = xbmcgui.Dialog()
-    dialog.ok(addon.getLocalizedString(30103), finish_label)
+            if not line:
+                xbmc.sleep(10)
+                continue
 
+            if line.startswith("###ACTION(kodi-stop)"):
+                xbmc.log(f'steamlink: Waiting to exit...', xbmc.LOGINFO)
+                xbmc.sleep(1000) # Keep dialog open until kodi stops
+                xbmc.log(f'steamlink: Finished waiting', xbmc.LOGINFO)
+                return
+
+            if line.startswith("###ACTION(kodi-start)"):
+                xbmc.log(f'steamlink: Finished waiting', xbmc.LOGINFO)
+                return
+
+            if line.startswith("###ERROR("):
+                xbmc.log(f'steamlink: Finished waiting due to error', xbmc.LOGINFO)
+                p_dialog.close()
+                dialog = xbmcgui.Dialog()
+                dialog.ok(addon.getLocalizedString(30200), 'Failed to launch')
+
+                return
+
+            match = re.search("###STATUS\((\d+)\):(.+)", line);
+            if match is not None:
+                match match.group(1): # Bump the progress along at certain milestones
+                    case '110': # Steamlink dependencies (check and possibly installing)
+                        xbmc.log(f'Line count: {line_nr}', xbmc.LOGINFO)
+                        line_nr = 1800
+                    case '120': # Starting steamlink 'shell'
+                        xbmc.log(f'Line count: {line_nr}', xbmc.LOGINFO)
+                        line_nr = line_max * 2
+
+                message = match.group(2)
+                sub_message = ''
+            else:
+                match = re.search("^(Step \d+/\d+|Get:\d+|Unpacking |Setting up |Downloading update|Unpacking update)", line);
+                if match is not None:
+                    sub_message = line
+
+            percent = int(round(line_nr / line_max * 100))
+            p_dialog.update(percent, f'{message}\n{sub_message}')
+            line_nr += 1
+
+def reset(addon):
+    c_dialog = xbmcgui.Dialog()
+    confirm_reset = c_dialog.yesno(f'{addon.getLocalizedString(30002)}', f'{addon.getLocalizedString(30003)}?')
+
+    if confirm_reset is False:
+        return
+
+    cmd = f'bash {get_resource_path("bin/cleanup.sh")}'
+    xbmc.log(cmd, xbmc.LOGINFO)
+    exit_code = os.system(cmd)
 
 def speaker_test(addon, speakers):
     dialog = xbmcgui.Dialog()
@@ -273,11 +271,6 @@ def get_addon_data_path(sub_path=''):
 
 def get_steamlink_home_path():
     return "{}/steamlink-home".format(get_addon_data_path())
-
-
-def is_steamlink_installed():
-    return os.path.isfile(get_addon_data_path('/steamlink/bin/shell'))
-
 
 def get_kodi_setting(setting):
     request = {
